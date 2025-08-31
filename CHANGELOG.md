@@ -232,6 +232,8 @@
 - Removed support for generating code for rustc versions < 1.51.
 ## Fixed
 - Typo in code for `--rustified-non-exhaustive-enums` (#3266)
+- Fixed a bad interaction with upcoming clang 22 (#3278).
+
 ## Security
 
 # 0.72.0 (2025-06-08)
