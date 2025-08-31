@@ -73,7 +73,7 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.72.0"
+version = "0.72.1"
 dependencies = [
  "annotate-snippets",
  "bitflags",
@@ -94,7 +94,7 @@ dependencies = [
 
 [[package]]
 name = "bindgen-cli"
-version = "0.72.0"
+version = "0.72.1"
 dependencies = [
  "bindgen",
  "env_logger 0.10.2",
