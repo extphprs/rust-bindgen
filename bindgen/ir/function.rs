@@ -290,6 +290,10 @@ pub(crate) struct FunctionSig {
 fn get_abi(cc: CXCallingConv) -> ClangAbi {
     use clang_sys::*;
     match cc {
+        // CXCallingConv_PreserveNone (20) - Added in libclang 19 for PHP 8.5+ on macOS ARM64
+        // Map to C calling convention since Rust doesn't have preserve_none ABI
+        cc if cc as u32 == 20 => ClangAbi::Known(Abi::C),
+
         CXCallingConv_Default | CXCallingConv_C => ClangAbi::Known(Abi::C),
         CXCallingConv_X86StdCall => ClangAbi::Known(Abi::Stdcall),
         CXCallingConv_X86FastCall => ClangAbi::Known(Abi::Fastcall),
