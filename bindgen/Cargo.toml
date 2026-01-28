@@ -7,16 +7,16 @@ authors = [
     "Nick Fitzgerald <fitzgen@gmail.com>",
     "The Servo project developers",
 ]
-description = "Automatically generates Rust FFI bindings to C and C++ libraries."
+description = "Fork of rust-bindgen with preserve_none ABI support"
 keywords = ["bindings", "ffi", "code-generation"]
 categories = ["external-ffi-bindings", "development-tools::ffi"]
 license = "BSD-3-Clause"
-name = "bindgen"
+name = "ewt-php-rs-bindgen"
 readme = "../README.md"
-repository = "https://github.com/rust-lang/rust-bindgen"
+repository = "https://github.com/extphprs/rust-bindgen"
 documentation = "https://docs.rs/bindgen"
 homepage = "https://rust-lang.github.io/rust-bindgen/"
-version = "0.72.1"
+version = "0.72.0-extphprs.1"
 build = "build.rs"
 rust-version.workspace = true
 edition.workspace = true
