@@ -207,10 +207,10 @@ impl Annotations {
     }
 
     fn parse(&mut self, comment: &clang::Comment, matched: &mut bool) {
-        use clang_sys::CXComment_HTMLStartTag;
-        if comment.kind() == CXComment_HTMLStartTag &&
-            comment.get_tag_name() == "div" &&
-            comment
+        use ext_php_rs_clang_sys::CXComment_HTMLStartTag;
+        if comment.kind() == CXComment_HTMLStartTag
+            && comment.get_tag_name() == "div"
+            && comment
                 .get_tag_attrs()
                 .next()
                 .is_some_and(|attr| attr.name == "rustbindgen")

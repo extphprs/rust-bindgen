@@ -121,15 +121,15 @@ impl DotAttributes for Var {
 }
 
 fn default_macro_constant_type(ctx: &BindgenContext, value: i64) -> IntKind {
-    if value < 0 ||
-        ctx.options().default_macro_constant_type ==
-            MacroTypeVariation::Signed
+    if value < 0
+        || ctx.options().default_macro_constant_type
+            == MacroTypeVariation::Signed
     {
         if value < i64::from(i32::MIN) || value > i64::from(i32::MAX) {
             IntKind::I64
-        } else if !ctx.options().fit_macro_constants ||
-            value < i64::from(i16::MIN) ||
-            value > i64::from(i16::MAX)
+        } else if !ctx.options().fit_macro_constants
+            || value < i64::from(i16::MIN)
+            || value > i64::from(i16::MAX)
         {
             IntKind::I32
         } else if value < i64::from(i8::MIN) || value > i64::from(i8::MAX) {
@@ -157,7 +157,8 @@ fn handle_function_macro(
 ) {
     let is_closing_paren = |t: &ClangToken| {
         // Test cheap token kind before comparing exact spellings.
-        t.kind == clang_sys::CXToken_Punctuation && t.spelling() == b")"
+        t.kind == ext_php_rs_clang_sys::CXToken_Punctuation
+            && t.spelling() == b")"
     };
     let tokens: Vec<_> = cursor.tokens().iter().collect();
     if let Some(boundary) = tokens.iter().position(is_closing_paren) {
@@ -179,7 +180,7 @@ impl ClangSubItemParser for Var {
     ) -> Result<ParseResult<Self>, ParseError> {
         use cexpr::expr::EvalResult;
         use cexpr::literal::CChar;
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         match cursor.kind() {
             CXCursor_MacroDefinition => {
                 for callbacks in &ctx.options().parse_callbacks {
@@ -300,10 +301,11 @@ impl ClangSubItemParser for Var {
 
                 // TODO(emilio): do we have to special-case constant arrays in
                 // some other places?
-                let is_const = ty.is_const() ||
-                    ([CXType_ConstantArray, CXType_IncompleteArray]
-                        .contains(&ty.kind()) &&
-                        ty.elem_type()
+                let is_const = ty.is_const()
+                    || ([CXType_ConstantArray, CXType_IncompleteArray]
+                        .contains(&ty.kind())
+                        && ty
+                            .elem_type()
                             .is_some_and(|element| element.is_const()));
 
                 let ty = match Item::from_ty(&ty, cursor, None, ctx) {
@@ -455,7 +457,7 @@ fn parse_int_literal_tokens(cursor: &clang::Cursor) -> Option<i64> {
 }
 
 fn get_integer_literal_from_cursor(cursor: &clang::Cursor) -> Option<i64> {
-    use clang_sys::*;
+    use ext_php_rs_clang_sys::*;
     let mut value = None;
     cursor.visit(|c| {
         match c.kind() {

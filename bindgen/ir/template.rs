@@ -217,7 +217,7 @@ impl TemplateInstantiation {
         ty: &clang::Type,
         ctx: &mut BindgenContext,
     ) -> Option<TemplateInstantiation> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
 
         let template_args = ty.template_args().map_or(vec![], |args| match ty
             .canonical_type()

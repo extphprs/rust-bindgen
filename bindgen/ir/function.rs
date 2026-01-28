@@ -9,7 +9,7 @@ use super::ty::TypeKind;
 use crate::callbacks::{ItemInfo, ItemKind};
 use crate::clang::{self, ABIKind, Attribute};
 use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
-use clang_sys::CXCallingConv;
+use ext_php_rs_clang_sys::CXCallingConv;
 
 use quote::TokenStreamExt;
 use std::io;
@@ -32,11 +32,13 @@ impl FunctionKind {
     pub(crate) fn from_cursor(cursor: &clang::Cursor) -> Option<FunctionKind> {
         // FIXME(emilio): Deduplicate logic with `ir::comp`.
         Some(match cursor.kind() {
-            clang_sys::CXCursor_FunctionDecl => FunctionKind::Function,
-            clang_sys::CXCursor_Constructor => {
+            ext_php_rs_clang_sys::CXCursor_FunctionDecl => {
+                FunctionKind::Function
+            }
+            ext_php_rs_clang_sys::CXCursor_Constructor => {
                 FunctionKind::Method(MethodKind::Constructor)
             }
-            clang_sys::CXCursor_Destructor => {
+            ext_php_rs_clang_sys::CXCursor_Destructor => {
                 FunctionKind::Method(if cursor.method_is_virtual() {
                     MethodKind::VirtualDestructor {
                         pure_virtual: cursor.method_is_pure_virtual(),
@@ -45,7 +47,7 @@ impl FunctionKind {
                     MethodKind::Destructor
                 })
             }
-            clang_sys::CXCursor_CXXMethod => {
+            ext_php_rs_clang_sys::CXCursor_CXXMethod => {
                 if cursor.method_is_virtual() {
                     FunctionKind::Method(MethodKind::Virtual {
                         pure_virtual: cursor.method_is_pure_virtual(),
@@ -288,7 +290,7 @@ pub(crate) struct FunctionSig {
 }
 
 fn get_abi(cc: CXCallingConv) -> ClangAbi {
-    use clang_sys::*;
+    use ext_php_rs_clang_sys::*;
     match cc {
         // CXCallingConv_PreserveNone (20) - Added in libclang 19 for PHP 8.5+ on macOS ARM64
         // Map to C calling convention since Rust doesn't have preserve_none ABI
@@ -324,7 +326,8 @@ pub(crate) fn cursor_mangling(
     }
 
     let is_itanium_abi = ctx.abi_kind() == ABIKind::GenericItanium;
-    let is_destructor = cursor.kind() == clang_sys::CXCursor_Destructor;
+    let is_destructor =
+        cursor.kind() == ext_php_rs_clang_sys::CXCursor_Destructor;
     if let Ok(mut manglings) = cursor.cxx_manglings() {
         while let Some(m) = manglings.pop() {
             // Only generate the destructor group 1, see below.
@@ -421,7 +424,7 @@ impl FunctionSig {
         cursor: &clang::Cursor,
         ctx: &mut BindgenContext,
     ) -> Result<Self, ParseError> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         debug!("FunctionSig::from_ty {ty:?} {cursor:?}");
 
         // Skip function templates
@@ -434,8 +437,8 @@ impl FunctionSig {
 
         // Don't parse operatorxx functions in C++
         let is_operator = |spelling: &str| {
-            spelling.starts_with("operator") &&
-                !clang::is_valid_identifier(spelling)
+            spelling.starts_with("operator")
+                && !clang::is_valid_identifier(spelling)
         };
         if is_operator(&spelling) && !ctx.options().represent_cxx_operators {
             return Err(ParseError::Continue);
@@ -444,8 +447,8 @@ impl FunctionSig {
         // Constructors of non-type template parameter classes for some reason
         // include the template parameter in their name. Just skip them, since
         // we don't handle well non-type template parameters anyway.
-        if (kind == CXCursor_Constructor || kind == CXCursor_Destructor) &&
-            spelling.contains('<')
+        if (kind == CXCursor_Constructor || kind == CXCursor_Destructor)
+            && spelling.contains('<')
         {
             return Err(ParseError::Continue);
         }
@@ -457,11 +460,11 @@ impl FunctionSig {
         };
 
         let mut args = match kind {
-            CXCursor_FunctionDecl |
-            CXCursor_Constructor |
-            CXCursor_CXXMethod |
-            CXCursor_ObjCInstanceMethodDecl |
-            CXCursor_ObjCClassMethodDecl => {
+            CXCursor_FunctionDecl
+            | CXCursor_Constructor
+            | CXCursor_CXXMethod
+            | CXCursor_ObjCInstanceMethodDecl
+            | CXCursor_ObjCClassMethodDecl => {
                 args_from_ty_and_cursor(ty, &cursor, ctx)
             }
             _ => {
@@ -526,8 +529,8 @@ impl FunctionSig {
         let is_method = kind == CXCursor_CXXMethod;
         let is_constructor = kind == CXCursor_Constructor;
         let is_destructor = kind == CXCursor_Destructor;
-        if (is_constructor || is_destructor || is_method) &&
-            cursor.lexical_parent() != cursor.semantic_parent()
+        if (is_constructor || is_destructor || is_method)
+            && cursor.lexical_parent() != cursor.semantic_parent()
         {
             // Only parse constructors once.
             return Err(ParseError::Continue);
@@ -537,9 +540,9 @@ impl FunctionSig {
             let is_const = is_method && cursor.method_is_const();
             let is_virtual = is_method && cursor.method_is_virtual();
             let is_static = is_method && cursor.method_is_static();
-            if !is_static &&
-                (!is_virtual ||
-                    ctx.options().use_specific_virtual_function_receiver)
+            if !is_static
+                && (!is_virtual
+                    || ctx.options().use_specific_virtual_function_receiver)
             {
                 let parent = cursor.semantic_parent();
                 let class = Item::parse(parent, None, ctx)
@@ -571,8 +574,8 @@ impl FunctionSig {
             }
         }
 
-        let ty_ret_type = if kind == CXCursor_ObjCInstanceMethodDecl ||
-            kind == CXCursor_ObjCClassMethodDecl
+        let ty_ret_type = if kind == CXCursor_ObjCInstanceMethodDecl
+            || kind == CXCursor_ObjCClassMethodDecl
         {
             ty.ret_type()
                 .or_else(|| cursor.ret_type())
@@ -726,7 +729,7 @@ impl ClangSubItemParser for Function {
         cursor: clang::Cursor,
         context: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
 
         let Some(kind) = FunctionKind::from_cursor(&cursor) else {
             return Err(ParseError::Continue);
@@ -737,8 +740,8 @@ impl ClangSubItemParser for Function {
         if visibility != CXVisibility_Default {
             return Err(ParseError::Continue);
         }
-        if cursor.access_specifier() == CX_CXXPrivate &&
-            !context.options().generate_private_functions
+        if cursor.access_specifier() == CX_CXXPrivate
+            && !context.options().generate_private_functions
         {
             return Err(ParseError::Continue);
         }
@@ -750,25 +753,25 @@ impl ClangSubItemParser for Function {
             _ => return Err(ParseError::Continue),
         };
 
-        if cursor.is_inlined_function() ||
-            cursor.definition().is_some_and(|x| x.is_inlined_function())
+        if cursor.is_inlined_function()
+            || cursor.definition().is_some_and(|x| x.is_inlined_function())
         {
-            if !context.options().generate_inline_functions &&
-                !context.options().wrap_static_fns
+            if !context.options().generate_inline_functions
+                && !context.options().wrap_static_fns
             {
                 return Err(ParseError::Continue);
             }
 
-            if cursor.is_deleted_function() &&
-                !context.options().generate_deleted_functions
+            if cursor.is_deleted_function()
+                && !context.options().generate_deleted_functions
             {
                 return Err(ParseError::Continue);
             }
 
             // We cannot handle `inline` functions that are not `static`.
-            if context.options().wrap_static_fns &&
-                cursor.is_inlined_function() &&
-                matches!(linkage, Linkage::External)
+            if context.options().wrap_static_fns
+                && cursor.is_inlined_function()
+                && matches!(linkage, Linkage::External)
             {
                 return Err(ParseError::Continue);
             }

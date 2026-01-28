@@ -78,7 +78,7 @@ impl ClangSubItemParser for Module {
         cursor: clang::Cursor,
         ctx: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         match cursor.kind() {
             CXCursor_Namespace => {
                 let module_id = ctx.module(cursor);

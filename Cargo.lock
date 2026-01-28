@@ -72,32 +72,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "bindgen"
-version = "0.72.1"
-dependencies = [
- "annotate-snippets",
- "bitflags",
- "cexpr",
- "clang-sys",
- "clap",
- "clap_complete",
- "itertools",
- "log",
- "prettyplease",
- "proc-macro2",
- "quote",
- "regex",
- "rustc-hash",
- "shlex",
- "syn",
-]
-
-[[package]]
 name = "bindgen-cli"
 version = "0.72.1"
 dependencies = [
- "bindgen",
  "env_logger 0.10.2",
+ "ext-php-rs-bindgen",
  "log",
  "proc-macro2",
  "shlex",
@@ -107,15 +86,15 @@ dependencies = [
 name = "bindgen-integration"
 version = "0.1.0"
 dependencies = [
- "bindgen",
  "cc",
+ "ext-php-rs-bindgen",
 ]
 
 [[package]]
 name = "bindgen-tests"
 version = "0.1.0"
 dependencies = [
- "bindgen",
+ "ext-php-rs-bindgen",
  "owo-colors",
  "prettyplease",
  "proc-macro2",
@@ -161,17 +140,6 @@ name = "cfg-if"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
-
-[[package]]
-name = "clang-sys"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b023947811758c97c59bf9d1c188fd619ad4718dcaa767947df1cadb14f39f4"
-dependencies = [
- "glob",
- "libc",
- "libloading",
-]
 
 [[package]]
 name = "clap"
@@ -265,6 +233,38 @@ checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
  "windows-sys",
+]
+
+[[package]]
+name = "ext-php-rs-bindgen"
+version = "0.72.1-extphprs.1"
+dependencies = [
+ "annotate-snippets",
+ "bitflags",
+ "cexpr",
+ "clap",
+ "clap_complete",
+ "ext-php-rs-clang-sys",
+ "itertools",
+ "log",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "rustc-hash",
+ "shlex",
+ "syn",
+]
+
+[[package]]
+name = "ext-php-rs-clang-sys"
+version = "1.8.1-extphprs.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa1ad6e482017d457d57d73691f8bed148a8a6198babe90830310c3308480a61"
+dependencies = [
+ "glob",
+ "libc",
+ "libloading",
 ]
 
 [[package]]

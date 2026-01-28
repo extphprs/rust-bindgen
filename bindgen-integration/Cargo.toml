@@ -11,13 +11,13 @@ rust-version.workspace = true
 edition.workspace = true
 
 [build-dependencies]
-bindgen = { workspace = true, default-features = true, features = ["experimental"] }
+ext-php-rs-bindgen = { workspace = true, default-features = true, features = ["experimental"] }
 cc.workspace = true
 
 [features]
-static = ["bindgen/static"]
-runtime = ["bindgen/runtime"]
+static = ["ext-php-rs-bindgen/static"]
+runtime = ["ext-php-rs-bindgen/runtime"]
 
-__testing_only_extra_assertions = ["bindgen/__testing_only_extra_assertions"]
-__testing_only_libclang_9 = ["bindgen/__testing_only_libclang_9"]
-__testing_only_libclang_16 = ["bindgen/__testing_only_libclang_16"]
+__testing_only_extra_assertions = ["ext-php-rs-bindgen/__testing_only_extra_assertions"]
+__testing_only_libclang_9 = ["ext-php-rs-bindgen/__testing_only_libclang_9"]
+__testing_only_libclang_16 = ["ext-php-rs-bindgen/__testing_only_libclang_16"]

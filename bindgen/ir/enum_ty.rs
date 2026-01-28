@@ -58,7 +58,7 @@ impl Enum {
         ty: &clang::Type,
         ctx: &mut BindgenContext,
     ) -> Result<Self, ParseError> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         debug!("Enum::from_ty {ty:?}");
 
         if ty.kind() != CXType_Enum {

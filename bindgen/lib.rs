@@ -87,10 +87,10 @@ const DEFAULT_NON_EXTERN_FNS_SUFFIX: &str = "__extern";
 
 fn file_is_cpp(name_file: &str) -> bool {
     Path::new(name_file).extension().is_some_and(|ext| {
-        ext.eq_ignore_ascii_case("hpp") ||
-            ext.eq_ignore_ascii_case("hxx") ||
-            ext.eq_ignore_ascii_case("hh") ||
-            ext.eq_ignore_ascii_case("h++")
+        ext.eq_ignore_ascii_case("hpp")
+            || ext.eq_ignore_ascii_case("hxx")
+            || ext.eq_ignore_ascii_case("hh")
+            || ext.eq_ignore_ascii_case("h++")
     })
 }
 
@@ -347,10 +347,10 @@ impl Builder {
             .clang_args
             .iter()
             .filter(|arg| {
-                !arg.starts_with("-MMD") &&
-                    !arg.starts_with("-MD") &&
-                    !arg.starts_with("--write-user-dependencies") &&
-                    !arg.starts_with("--user-dependencies")
+                !arg.starts_with("-MMD")
+                    && !arg.starts_with("-MD")
+                    && !arg.starts_with("--write-user-dependencies")
+                    && !arg.starts_with("--user-dependencies")
             })
             .cloned()
             .collect::<Vec<_>>();
@@ -378,8 +378,8 @@ impl Builder {
     /// issues. The resulting file will be named something like `__bindgen.i` or
     /// `__bindgen.ii`
     pub fn dump_preprocessed_input(&self) -> io::Result<()> {
-        let clang =
-            clang_sys::support::Clang::find(None, &[]).ok_or_else(|| {
+        let clang = ext_php_rs_clang_sys::support::Clang::find(None, &[])
+            .ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::Other,
                     "Cannot find clang executable",
@@ -597,7 +597,7 @@ impl BindgenOptions {
 fn ensure_libclang_is_loaded() {
     use std::sync::{Arc, OnceLock};
 
-    if clang_sys::is_loaded() {
+    if ext_php_rs_clang_sys::is_loaded() {
         return;
     }
 
@@ -605,14 +605,15 @@ fn ensure_libclang_is_loaded() {
     // doesn't get dropped prematurely, nor is loaded multiple times
     // across different threads.
 
-    static LIBCLANG: OnceLock<Arc<clang_sys::SharedLibrary>> = OnceLock::new();
+    static LIBCLANG: OnceLock<Arc<ext_php_rs_clang_sys::SharedLibrary>> =
+        OnceLock::new();
     let libclang = LIBCLANG.get_or_init(|| {
-        clang_sys::load().expect("Unable to find libclang");
-        clang_sys::get_library()
+        ext_php_rs_clang_sys::load().expect("Unable to find libclang");
+        ext_php_rs_clang_sys::get_library()
             .expect("We just loaded libclang and it had better still be here!")
     });
 
-    clang_sys::set_library(Some(libclang.clone()));
+    ext_php_rs_clang_sys::set_library(Some(libclang.clone()));
 }
 
 #[cfg(not(feature = "runtime"))]
@@ -753,12 +754,12 @@ impl Bindings {
         ensure_libclang_is_loaded();
 
         #[cfg(feature = "runtime")]
-        match clang_sys::get_library().unwrap().version() {
+        match ext_php_rs_clang_sys::get_library().unwrap().version() {
             None => {
                 warn!("Could not detect a Clang version, make sure you are using libclang 9 or newer");
             }
             Some(version) => {
-                if version < clang_sys::Version::V9_0 {
+                if version < ext_php_rs_clang_sys::Version::V9_0 {
                     warn!("Detected Clang version {version:?} which is unsupported and can cause invalid code generation, use libclang 9 or newer");
                 }
             }
@@ -767,7 +768,10 @@ impl Bindings {
         #[cfg(feature = "runtime")]
         debug!(
             "Generating bindings, libclang at {}",
-            clang_sys::get_library().unwrap().path().display()
+            ext_php_rs_clang_sys::get_library()
+                .unwrap()
+                .path()
+                .display()
         );
         #[cfg(not(feature = "runtime"))]
         debug!("Generating bindings, libclang linked");
@@ -819,8 +823,8 @@ impl Bindings {
                             return false;
                         }
 
-                        if arg.starts_with("-I") ||
-                            arg.starts_with("--include-directory=")
+                        if arg.starts_with("-I")
+                            || arg.starts_with("--include-directory=")
                         {
                             return false;
                         }
@@ -835,7 +839,7 @@ impl Bindings {
                 "Trying to find clang with flags: {clang_args_for_clang_sys:?}"
             );
 
-            let Some(clang) = clang_sys::support::Clang::find(
+            let Some(clang) = ext_php_rs_clang_sys::support::Clang::find(
                 None,
                 &clang_args_for_clang_sys,
             ) else {
@@ -845,8 +849,8 @@ impl Bindings {
             debug!("Found clang: {clang:?}");
 
             // Whether we are working with C or C++ inputs.
-            let is_cpp = args_are_cpp(&options.clang_args) ||
-                options.input_headers.iter().any(|h| file_is_cpp(h));
+            let is_cpp = args_are_cpp(&options.clang_args)
+                || options.input_headers.iter().any(|h| file_is_cpp(h));
 
             let search_paths = if is_cpp {
                 clang.cpp_search_paths
@@ -1127,7 +1131,7 @@ fn parse_one(
 
 /// Parse the Clang AST into our `Item` internal representation.
 fn parse(context: &mut BindgenContext) -> Result<(), BindgenError> {
-    use clang_sys::*;
+    use ext_php_rs_clang_sys::*;
 
     let mut error = None;
     for d in &context.translation_unit().diags() {

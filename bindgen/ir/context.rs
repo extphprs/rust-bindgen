@@ -252,9 +252,9 @@ where
     T: Copy + Into<ItemId>,
 {
     fn can_derive_partialord(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_partialord &&
-            ctx.lookup_can_derive_partialeq_or_partialord(*self) ==
-                CanDerive::Yes
+        ctx.options().derive_partialord
+            && ctx.lookup_can_derive_partialeq_or_partialord(*self)
+                == CanDerive::Yes
     }
 }
 
@@ -263,9 +263,9 @@ where
     T: Copy + Into<ItemId>,
 {
     fn can_derive_partialeq(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_partialeq &&
-            ctx.lookup_can_derive_partialeq_or_partialord(*self) ==
-                CanDerive::Yes
+        ctx.options().derive_partialeq
+            && ctx.lookup_can_derive_partialeq_or_partialord(*self)
+                == CanDerive::Yes
     }
 }
 
@@ -274,10 +274,10 @@ where
     T: Copy + Into<ItemId>,
 {
     fn can_derive_eq(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_eq &&
-            ctx.lookup_can_derive_partialeq_or_partialord(*self) ==
-                CanDerive::Yes &&
-            !ctx.lookup_has_float(*self)
+        ctx.options().derive_eq
+            && ctx.lookup_can_derive_partialeq_or_partialord(*self)
+                == CanDerive::Yes
+            && !ctx.lookup_has_float(*self)
     }
 }
 
@@ -286,10 +286,10 @@ where
     T: Copy + Into<ItemId>,
 {
     fn can_derive_ord(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_ord &&
-            ctx.lookup_can_derive_partialeq_or_partialord(*self) ==
-                CanDerive::Yes &&
-            !ctx.lookup_has_float(*self)
+        ctx.options().derive_ord
+            && ctx.lookup_can_derive_partialeq_or_partialord(*self)
+                == CanDerive::Yes
+            && !ctx.lookup_has_float(*self)
     }
 }
 
@@ -547,7 +547,7 @@ impl BindgenContext {
         let index = clang::Index::new(false, true);
 
         let parse_options =
-            clang_sys::CXTranslationUnit_DetailedPreprocessingRecord;
+            ext_php_rs_clang_sys::CXTranslationUnit_DetailedPreprocessingRecord;
 
         let translation_unit = {
             let _t =
@@ -702,11 +702,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     ) {
         debug!("BindgenContext::add_item({item:?}, declaration: {declaration:?}, loc: {location:?}");
         debug_assert!(
-            declaration.is_some() ||
-                !item.kind().is_type() ||
-                item.kind().expect_type().is_builtin_or_type_param() ||
-                item.kind().expect_type().is_opaque(self, &item) ||
-                item.kind().expect_type().is_unresolved_ref(),
+            declaration.is_some()
+                || !item.kind().is_type()
+                || item.kind().expect_type().is_builtin_or_type_param()
+                || item.kind().expect_type().is_opaque(self, &item)
+                || item.kind().expect_type().is_unresolved_ref(),
             "Adding a type without declaration?"
         );
 
@@ -821,7 +821,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         );
         assert_eq!(
             definition.kind(),
-            clang_sys::CXCursor_TemplateTypeParameter
+            ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
         );
 
         self.add_item_to_module(&item);
@@ -847,7 +847,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     pub(crate) fn get_type_param(&self, definition: &Cursor) -> Option<TypeId> {
         assert_eq!(
             definition.kind(),
-            clang_sys::CXCursor_TemplateTypeParameter
+            ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
         );
         self.type_params.get(definition).copied()
     }
@@ -1067,10 +1067,10 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             };
 
             match *ty.kind() {
-                TypeKind::Comp(..) |
-                TypeKind::TemplateAlias(..) |
-                TypeKind::Enum(..) |
-                TypeKind::Alias(..) => {}
+                TypeKind::Comp(..)
+                | TypeKind::TemplateAlias(..)
+                | TypeKind::Enum(..)
+                | TypeKind::Alias(..) => {}
                 _ => continue,
             }
 
@@ -1649,15 +1649,13 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             // being specialized via the `location`'s type, and if we do not
             // filter it out, we'll add an extra layer of template instantiation
             // on accident.
-            let idx = children
-                .iter()
-                .position(|c| c.kind() == clang_sys::CXCursor_TemplateRef);
+            let idx = children.iter().position(|c| {
+                c.kind() == ext_php_rs_clang_sys::CXCursor_TemplateRef
+            });
             if let Some(idx) = idx {
-                if children
-                    .iter()
-                    .take(idx)
-                    .all(|c| c.kind() == clang_sys::CXCursor_NamespaceRef)
-                {
+                if children.iter().take(idx).all(|c| {
+                    c.kind() == ext_php_rs_clang_sys::CXCursor_NamespaceRef
+                }) {
                     children = children.into_iter().skip(idx + 1).collect();
                 }
             }
@@ -1665,9 +1663,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         for child in children.iter().rev() {
             match child.kind() {
-                clang_sys::CXCursor_TypeRef |
-                clang_sys::CXCursor_TypedefDecl |
-                clang_sys::CXCursor_TypeAliasDecl => {
+                ext_php_rs_clang_sys::CXCursor_TypeRef
+                | ext_php_rs_clang_sys::CXCursor_TypedefDecl
+                | ext_php_rs_clang_sys::CXCursor_TypeAliasDecl => {
                     // The `with_id` ID will potentially end up unused if we give up
                     // on this type (for example, because it has const value
                     // template args), so if we pass `with_id` as the parent, it is
@@ -1682,7 +1680,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                     );
                     args.push(ty);
                 }
-                clang_sys::CXCursor_TemplateRef => {
+                ext_php_rs_clang_sys::CXCursor_TemplateRef => {
                     let (
                         template_decl_cursor,
                         template_decl_id,
@@ -1691,8 +1689,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                         child,
                     )?;
 
-                    if num_expected_template_args == 0 ||
-                        child.has_at_least_num_children(
+                    if num_expected_template_args == 0
+                        || child.has_at_least_num_children(
                             num_expected_template_args,
                         )
                     {
@@ -1848,7 +1846,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         ty: &clang::Type,
         location: Option<Cursor>,
     ) -> Option<TypeId> {
-        use clang_sys::{CXCursor_TypeAliasTemplateDecl, CXCursor_TypeRef};
+        use ext_php_rs_clang_sys::{
+            CXCursor_TypeAliasTemplateDecl, CXCursor_TypeRef,
+        };
         debug!("builtin_or_resolved_ty: {ty:?}, {location:?}, {with_id:?}, {parent_id:?}");
 
         if let Some(decl) = ty.canonical_declaration(location.as_ref()) {
@@ -1864,8 +1864,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 //   * we have already parsed and resolved this type, and
                 //     there's nothing left to do.
                 if let Some(location) = location {
-                    if decl.cursor().is_template_like() &&
-                        *ty != decl.cursor().cur_type()
+                    if decl.cursor().is_template_like()
+                        && *ty != decl.cursor().cur_type()
                     {
                         // For specialized type aliases, there's no way to get the
                         // template parameters as of this writing (for a struct
@@ -1877,10 +1877,10 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                         // exposed.
                         //
                         // This is _tricky_, I know :(
-                        if decl.cursor().kind() ==
-                            CXCursor_TypeAliasTemplateDecl &&
-                            !location.contains_cursor(CXCursor_TypeRef) &&
-                            ty.canonical_type().is_valid_and_exposed()
+                        if decl.cursor().kind()
+                            == CXCursor_TypeAliasTemplateDecl
+                            && !location.contains_cursor(CXCursor_TypeRef)
+                            && ty.canonical_type().is_valid_and_exposed()
                         {
                             return None;
                         }
@@ -1965,7 +1965,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     fn build_builtin_ty(&mut self, ty: &clang::Type) -> Option<TypeId> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         let type_kind = match ty.kind() {
             CXType_NullPtr => TypeKind::NullPtr,
             CXType_Void => TypeKind::Void,
@@ -2100,7 +2100,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 single_header,
                 &c_args,
                 &[],
-                clang_sys::CXTranslationUnit_ForSerialization,
+                ext_php_rs_clang_sys::CXTranslationUnit_ForSerialization,
             )?;
             tu.save(&pch).ok()?;
 
@@ -2206,7 +2206,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     ) -> (Option<String>, ModuleKind) {
         assert_eq!(
             cursor.kind(),
-            ::clang_sys::CXCursor_Namespace,
+            ::ext_php_rs_clang_sys::CXCursor_Namespace,
             "Be a nice person"
         );
 
@@ -2278,7 +2278,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// Given a `CXCursor_Namespace` cursor, return the item ID of the
     /// corresponding module, or create one on the fly.
     pub(crate) fn module(&mut self, cursor: Cursor) -> ModuleId {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         assert_eq!(cursor.kind(), CXCursor_Namespace, "Be a nice person");
         let cursor = cursor.canonical();
         if let Some(id) = self.modules.get(&cursor) {
@@ -2378,9 +2378,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// Is the given type a type from <stdint.h> that corresponds to a Rust primitive type?
     pub(crate) fn is_stdint_type(&self, name: &str) -> bool {
         match name {
-            "int8_t" | "uint8_t" | "int16_t" | "uint16_t" | "int32_t" |
-            "uint32_t" | "int64_t" | "uint64_t" | "uintptr_t" |
-            "intptr_t" | "ptrdiff_t" => true,
+            "int8_t" | "uint8_t" | "int16_t" | "uint16_t" | "int32_t"
+            | "uint32_t" | "int64_t" | "uint64_t" | "uintptr_t"
+            | "intptr_t" | "ptrdiff_t" => true,
             "size_t" | "ssize_t" => self.options.size_t_is_usize,
             _ => false,
         }
@@ -2408,11 +2408,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 .filter(|&(_, item)| {
                     // If nothing is explicitly allowlisted, then everything is fair
                     // game.
-                    if self.options().allowlisted_types.is_empty() &&
-                        self.options().allowlisted_functions.is_empty() &&
-                        self.options().allowlisted_vars.is_empty() &&
-                        self.options().allowlisted_files.is_empty() &&
-                        self.options().allowlisted_items.is_empty()
+                    if self.options().allowlisted_types.is_empty()
+                        && self.options().allowlisted_functions.is_empty()
+                        && self.options().allowlisted_vars.is_empty()
+                        && self.options().allowlisted_files.is_empty()
+                        && self.options().allowlisted_items.is_empty()
                     {
                         return true;
                     }
@@ -2465,19 +2465,19 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                             // make the #[derive] analysis not be lame.
                             if !self.options().allowlist_recursively {
                                 match *ty.kind() {
-                                    TypeKind::Void |
-                                    TypeKind::NullPtr |
-                                    TypeKind::Int(..) |
-                                    TypeKind::Float(..) |
-                                    TypeKind::Complex(..) |
-                                    TypeKind::Array(..) |
-                                    TypeKind::Vector(..) |
-                                    TypeKind::Pointer(..) |
-                                    TypeKind::Reference(..) |
-                                    TypeKind::Function(..) |
-                                    TypeKind::ResolvedTypeRef(..) |
-                                    TypeKind::Opaque |
-                                    TypeKind::TypeParam => return true,
+                                    TypeKind::Void
+                                    | TypeKind::NullPtr
+                                    | TypeKind::Int(..)
+                                    | TypeKind::Float(..)
+                                    | TypeKind::Complex(..)
+                                    | TypeKind::Array(..)
+                                    | TypeKind::Vector(..)
+                                    | TypeKind::Pointer(..)
+                                    | TypeKind::Reference(..)
+                                    | TypeKind::Function(..)
+                                    | TypeKind::ResolvedTypeRef(..)
+                                    | TypeKind::Opaque
+                                    | TypeKind::TypeParam => return true,
                                     _ => {}
                                 }
                                 if self.is_stdint_type(&name) {
@@ -2795,9 +2795,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     fn compute_cannot_derive_partialord_partialeq_or_eq(&mut self) {
         let _t = self.timer("compute_cannot_derive_partialord_partialeq_or_eq");
         assert!(self.cannot_derive_partialeq_or_partialord.is_none());
-        if self.options.derive_partialord ||
-            self.options.derive_partialeq ||
-            self.options.derive_eq
+        if self.options.derive_partialord
+            || self.options.derive_partialeq
+            || self.options.derive_eq
         {
             self.cannot_derive_partialeq_or_partialord =
                 Some(analyze::<CannotDerive>((
@@ -2844,8 +2844,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         // derive `Copy` or not.
         let id = id.into();
 
-        !self.lookup_has_type_param_in_array(id) &&
-            !self.cannot_derive_copy.as_ref().unwrap().contains(&id)
+        !self.lookup_has_type_param_in_array(id)
+            && !self.cannot_derive_copy.as_ref().unwrap().contains(&id)
     }
 
     /// Compute whether the type has type parameter in array.
@@ -3072,20 +3072,20 @@ impl TemplateParameters for PartialType {
         // Wouldn't it be nice if libclang would reliably give us this
         // information‽
         match self.decl().kind() {
-            clang_sys::CXCursor_ClassTemplate |
-            clang_sys::CXCursor_FunctionTemplate |
-            clang_sys::CXCursor_TypeAliasTemplateDecl => {
+            ext_php_rs_clang_sys::CXCursor_ClassTemplate
+            | ext_php_rs_clang_sys::CXCursor_FunctionTemplate
+            | ext_php_rs_clang_sys::CXCursor_TypeAliasTemplateDecl => {
                 let mut num_params = 0;
                 self.decl().visit(|c| {
                     match c.kind() {
-                        clang_sys::CXCursor_TemplateTypeParameter |
-                        clang_sys::CXCursor_TemplateTemplateParameter |
-                        clang_sys::CXCursor_NonTypeTemplateParameter => {
+                        ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
+                        | ext_php_rs_clang_sys::CXCursor_TemplateTemplateParameter
+                        | ext_php_rs_clang_sys::CXCursor_NonTypeTemplateParameter => {
                             num_params += 1;
                         }
                         _ => {}
                     }
-                    clang_sys::CXChildVisit_Continue
+                    ext_php_rs_clang_sys::CXChildVisit_Continue
                 });
                 num_params
             }

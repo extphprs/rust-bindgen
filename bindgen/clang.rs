@@ -5,7 +5,7 @@
 #![deny(clippy::missing_docs_in_private_items)]
 
 use crate::ir::context::BindgenContext;
-use clang_sys::*;
+use ext_php_rs_clang_sys::*;
 use std::cmp;
 
 use std::ffi::{CStr, CString};
@@ -117,7 +117,7 @@ impl Cursor {
     /// Gets the C++ manglings for this cursor, or an error if the manglings
     /// are not available.
     pub(crate) fn cxx_manglings(&self) -> Result<Vec<String>, ()> {
-        use clang_sys::*;
+        use ext_php_rs_clang_sys::*;
         unsafe {
             let manglings = clang_Cursor_getCXXManglings(self.x);
             if manglings.is_null() {
@@ -246,11 +246,10 @@ impl Cursor {
     pub(crate) fn is_toplevel(&self) -> bool {
         let mut semantic_parent = self.fallible_semantic_parent();
 
-        while semantic_parent.is_some() &&
-            (semantic_parent.unwrap().kind() == CXCursor_Namespace ||
-                semantic_parent.unwrap().kind() ==
-                    CXCursor_NamespaceAlias ||
-                semantic_parent.unwrap().kind() == CXCursor_NamespaceRef)
+        while semantic_parent.is_some()
+            && (semantic_parent.unwrap().kind() == CXCursor_Namespace
+                || semantic_parent.unwrap().kind() == CXCursor_NamespaceAlias
+                || semantic_parent.unwrap().kind() == CXCursor_NamespaceRef)
         {
             semantic_parent =
                 semantic_parent.unwrap().fallible_semantic_parent();
@@ -267,9 +266,9 @@ impl Cursor {
     pub(crate) fn is_template_like(&self) -> bool {
         matches!(
             self.kind(),
-            CXCursor_ClassTemplate |
-                CXCursor_ClassTemplatePartialSpecialization |
-                CXCursor_TypeAliasTemplateDecl
+            CXCursor_ClassTemplate
+                | CXCursor_ClassTemplatePartialSpecialization
+                | CXCursor_TypeAliasTemplateDecl
         )
     }
 
@@ -296,9 +295,9 @@ impl Cursor {
     /// Is the referent a fully specialized template specialization without any
     /// remaining free template arguments?
     pub(crate) fn is_fully_specialized_template(&self) -> bool {
-        self.is_template_specialization() &&
-            self.kind() != CXCursor_ClassTemplatePartialSpecialization &&
-            self.num_template_args().unwrap_or(0) > 0
+        self.is_template_specialization()
+            && self.kind() != CXCursor_ClassTemplatePartialSpecialization
+            && self.num_template_args().unwrap_or(0) > 0
     }
 
     /// Is the referent a template specialization that still has remaining free
@@ -324,9 +323,9 @@ impl Cursor {
     pub(crate) fn is_template_parameter(&self) -> bool {
         matches!(
             self.kind(),
-            CXCursor_TemplateTemplateParameter |
-                CXCursor_TemplateTypeParameter |
-                CXCursor_NonTypeTemplateParameter
+            CXCursor_TemplateTemplateParameter
+                | CXCursor_TemplateTypeParameter
+                | CXCursor_NonTypeTemplateParameter
         )
     }
 
@@ -664,9 +663,9 @@ impl Cursor {
         // inline function without a definition, and it's not a defaulted
         // function, we can reasonably safely conclude that it's a deleted
         // function.
-        self.is_inlined_function() &&
-            self.definition().is_none() &&
-            !self.is_defaulted_function()
+        self.is_inlined_function()
+            && self.definition().is_none()
+            && !self.is_defaulted_function()
     }
 
     /// Is the referent a bit field declaration?
@@ -788,11 +787,11 @@ impl Cursor {
                 let found_attr = &mut found_attrs[idx];
                 if !*found_attr {
                     // `attr.name` and` attr.token_kind` are checked against unexposed attributes only.
-                    if attr.kind == Some(kind) ||
-                        (kind == CXCursor_UnexposedAttr &&
-                            cur.tokens().iter().any(|t| {
-                                t.kind == attr.token_kind &&
-                                    t.spelling() == attr.name
+                    if attr.kind == Some(kind)
+                        || (kind == CXCursor_UnexposedAttr
+                            && cur.tokens().iter().any(|t| {
+                                t.kind == attr.token_kind
+                                    && t.spelling() == attr.name
                             }))
                     {
                         *found_attr = true;
@@ -1408,12 +1407,12 @@ impl Type {
     /// to.
     pub(crate) fn pointee_type(&self) -> Option<Type> {
         match self.kind() {
-            CXType_Pointer |
-            CXType_RValueReference |
-            CXType_LValueReference |
-            CXType_MemberPointer |
-            CXType_BlockPointer |
-            CXType_ObjCObjectPointer => {
+            CXType_Pointer
+            | CXType_RValueReference
+            | CXType_LValueReference
+            | CXType_MemberPointer
+            | CXType_BlockPointer
+            | CXType_ObjCObjectPointer => {
                 let ret = Type {
                     x: unsafe { clang_getPointeeType(self.x) },
                 };
@@ -1516,12 +1515,12 @@ impl Type {
         // Yep, the spelling of this containing type-parameter is extremely
         // nasty... But can happen in <type_traits>. Unfortunately I couldn't
         // reduce it enough :(
-        self.template_args().is_some_and(|args| args.len() > 0) &&
-            !matches!(
+        self.template_args().is_some_and(|args| args.len() > 0)
+            && !matches!(
                 self.declaration().kind(),
-                CXCursor_ClassTemplatePartialSpecialization |
-                    CXCursor_TypeAliasTemplateDecl |
-                    CXCursor_TemplateTemplateParameter
+                CXCursor_ClassTemplatePartialSpecialization
+                    | CXCursor_TypeAliasTemplateDecl
+                    | CXCursor_TemplateTemplateParameter
             )
     }
 
@@ -1546,9 +1545,9 @@ impl Type {
                 .is_match(spelling.as_ref())
         }
 
-        self.kind() == CXType_Unexposed &&
-            (hacky_parse_associated_type(self.spelling()) ||
-                hacky_parse_associated_type(
+        self.kind() == CXType_Unexposed
+            && (hacky_parse_associated_type(self.spelling())
+                || hacky_parse_associated_type(
                     self.canonical_type().spelling(),
                 ))
     }
@@ -2309,8 +2308,8 @@ impl EvalResult {
         {
             let mut found_cant_eval = false;
             cursor.visit(|c| {
-                if c.kind() == CXCursor_TypeRef &&
-                    c.cur_type().canonical_type().kind() == CXType_Unexposed
+                if c.kind() == CXCursor_TypeRef
+                    && c.cur_type().canonical_type().kind() == CXType_Unexposed
                 {
                     found_cant_eval = true;
                     return CXChildVisit_Break;
