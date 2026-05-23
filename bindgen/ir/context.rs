@@ -547,7 +547,7 @@ impl BindgenContext {
         let index = clang::Index::new(false, true);
 
         let parse_options =
-            ext_php_rs_clang_sys::CXTranslationUnit_DetailedPreprocessingRecord;
+            clang_sys::CXTranslationUnit_DetailedPreprocessingRecord;
 
         let translation_unit = {
             let _t =
@@ -821,7 +821,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         );
         assert_eq!(
             definition.kind(),
-            ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
+            clang_sys::CXCursor_TemplateTypeParameter
         );
 
         self.add_item_to_module(&item);
@@ -847,7 +847,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     pub(crate) fn get_type_param(&self, definition: &Cursor) -> Option<TypeId> {
         assert_eq!(
             definition.kind(),
-            ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
+            clang_sys::CXCursor_TemplateTypeParameter
         );
         self.type_params.get(definition).copied()
     }
@@ -1650,11 +1650,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             // filter it out, we'll add an extra layer of template instantiation
             // on accident.
             let idx = children.iter().position(|c| {
-                c.kind() == ext_php_rs_clang_sys::CXCursor_TemplateRef
+                c.kind() == clang_sys::CXCursor_TemplateRef
             });
             if let Some(idx) = idx {
                 if children.iter().take(idx).all(|c| {
-                    c.kind() == ext_php_rs_clang_sys::CXCursor_NamespaceRef
+                    c.kind() == clang_sys::CXCursor_NamespaceRef
                 }) {
                     children = children.into_iter().skip(idx + 1).collect();
                 }
@@ -1663,9 +1663,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         for child in children.iter().rev() {
             match child.kind() {
-                ext_php_rs_clang_sys::CXCursor_TypeRef
-                | ext_php_rs_clang_sys::CXCursor_TypedefDecl
-                | ext_php_rs_clang_sys::CXCursor_TypeAliasDecl => {
+                clang_sys::CXCursor_TypeRef
+                | clang_sys::CXCursor_TypedefDecl
+                | clang_sys::CXCursor_TypeAliasDecl => {
                     // The `with_id` ID will potentially end up unused if we give up
                     // on this type (for example, because it has const value
                     // template args), so if we pass `with_id` as the parent, it is
@@ -1680,7 +1680,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                     );
                     args.push(ty);
                 }
-                ext_php_rs_clang_sys::CXCursor_TemplateRef => {
+                clang_sys::CXCursor_TemplateRef => {
                     let (
                         template_decl_cursor,
                         template_decl_id,
@@ -1846,7 +1846,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         ty: &clang::Type,
         location: Option<Cursor>,
     ) -> Option<TypeId> {
-        use ext_php_rs_clang_sys::{
+        use clang_sys::{
             CXCursor_TypeAliasTemplateDecl, CXCursor_TypeRef,
         };
         debug!("builtin_or_resolved_ty: {ty:?}, {location:?}, {with_id:?}, {parent_id:?}");
@@ -1965,7 +1965,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     fn build_builtin_ty(&mut self, ty: &clang::Type) -> Option<TypeId> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         let type_kind = match ty.kind() {
             CXType_NullPtr => TypeKind::NullPtr,
             CXType_Void => TypeKind::Void,
@@ -2100,7 +2100,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 single_header,
                 &c_args,
                 &[],
-                ext_php_rs_clang_sys::CXTranslationUnit_ForSerialization,
+                clang_sys::CXTranslationUnit_ForSerialization,
             )?;
             tu.save(&pch).ok()?;
 
@@ -2206,7 +2206,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     ) -> (Option<String>, ModuleKind) {
         assert_eq!(
             cursor.kind(),
-            ::ext_php_rs_clang_sys::CXCursor_Namespace,
+            ::clang_sys::CXCursor_Namespace,
             "Be a nice person"
         );
 
@@ -2278,7 +2278,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// Given a `CXCursor_Namespace` cursor, return the item ID of the
     /// corresponding module, or create one on the fly.
     pub(crate) fn module(&mut self, cursor: Cursor) -> ModuleId {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         assert_eq!(cursor.kind(), CXCursor_Namespace, "Be a nice person");
         let cursor = cursor.canonical();
         if let Some(id) = self.modules.get(&cursor) {
@@ -3072,20 +3072,20 @@ impl TemplateParameters for PartialType {
         // Wouldn't it be nice if libclang would reliably give us this
         // information‽
         match self.decl().kind() {
-            ext_php_rs_clang_sys::CXCursor_ClassTemplate
-            | ext_php_rs_clang_sys::CXCursor_FunctionTemplate
-            | ext_php_rs_clang_sys::CXCursor_TypeAliasTemplateDecl => {
+            clang_sys::CXCursor_ClassTemplate
+            | clang_sys::CXCursor_FunctionTemplate
+            | clang_sys::CXCursor_TypeAliasTemplateDecl => {
                 let mut num_params = 0;
                 self.decl().visit(|c| {
                     match c.kind() {
-                        ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
-                        | ext_php_rs_clang_sys::CXCursor_TemplateTemplateParameter
-                        | ext_php_rs_clang_sys::CXCursor_NonTypeTemplateParameter => {
+                        clang_sys::CXCursor_TemplateTypeParameter
+                        | clang_sys::CXCursor_TemplateTemplateParameter
+                        | clang_sys::CXCursor_NonTypeTemplateParameter => {
                             num_params += 1;
                         }
                         _ => {}
                     }
-                    ext_php_rs_clang_sys::CXChildVisit_Continue
+                    clang_sys::CXChildVisit_Continue
                 });
                 num_params
             }

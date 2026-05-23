@@ -9,7 +9,7 @@ use super::ty::TypeKind;
 use crate::callbacks::{ItemInfo, ItemKind};
 use crate::clang::{self, ABIKind, Attribute};
 use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
-use ext_php_rs_clang_sys::CXCallingConv;
+use clang_sys::CXCallingConv;
 
 use quote::TokenStreamExt;
 use std::io;
@@ -32,13 +32,13 @@ impl FunctionKind {
     pub(crate) fn from_cursor(cursor: &clang::Cursor) -> Option<FunctionKind> {
         // FIXME(emilio): Deduplicate logic with `ir::comp`.
         Some(match cursor.kind() {
-            ext_php_rs_clang_sys::CXCursor_FunctionDecl => {
+            clang_sys::CXCursor_FunctionDecl => {
                 FunctionKind::Function
             }
-            ext_php_rs_clang_sys::CXCursor_Constructor => {
+            clang_sys::CXCursor_Constructor => {
                 FunctionKind::Method(MethodKind::Constructor)
             }
-            ext_php_rs_clang_sys::CXCursor_Destructor => {
+            clang_sys::CXCursor_Destructor => {
                 FunctionKind::Method(if cursor.method_is_virtual() {
                     MethodKind::VirtualDestructor {
                         pure_virtual: cursor.method_is_pure_virtual(),
@@ -47,7 +47,7 @@ impl FunctionKind {
                     MethodKind::Destructor
                 })
             }
-            ext_php_rs_clang_sys::CXCursor_CXXMethod => {
+            clang_sys::CXCursor_CXXMethod => {
                 if cursor.method_is_virtual() {
                     FunctionKind::Method(MethodKind::Virtual {
                         pure_virtual: cursor.method_is_pure_virtual(),
@@ -290,7 +290,7 @@ pub(crate) struct FunctionSig {
 }
 
 fn get_abi(cc: CXCallingConv) -> ClangAbi {
-    use ext_php_rs_clang_sys::*;
+    use clang_sys::*;
     match cc {
         // CXCallingConv_PreserveNone (20) - Added in libclang 19 for PHP 8.5+ on macOS ARM64
         // Map to C calling convention since Rust doesn't have preserve_none ABI
@@ -327,7 +327,7 @@ pub(crate) fn cursor_mangling(
 
     let is_itanium_abi = ctx.abi_kind() == ABIKind::GenericItanium;
     let is_destructor =
-        cursor.kind() == ext_php_rs_clang_sys::CXCursor_Destructor;
+        cursor.kind() == clang_sys::CXCursor_Destructor;
     if let Ok(mut manglings) = cursor.cxx_manglings() {
         while let Some(m) = manglings.pop() {
             // Only generate the destructor group 1, see below.
@@ -424,7 +424,7 @@ impl FunctionSig {
         cursor: &clang::Cursor,
         ctx: &mut BindgenContext,
     ) -> Result<Self, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         debug!("FunctionSig::from_ty {ty:?} {cursor:?}");
 
         // Skip function templates
@@ -729,7 +729,7 @@ impl ClangSubItemParser for Function {
         cursor: clang::Cursor,
         context: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
 
         let Some(kind) = FunctionKind::from_cursor(&cursor) else {
             return Err(ParseError::Continue);

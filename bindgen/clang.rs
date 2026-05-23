@@ -5,7 +5,7 @@
 #![deny(clippy::missing_docs_in_private_items)]
 
 use crate::ir::context::BindgenContext;
-use ext_php_rs_clang_sys::*;
+use clang_sys::*;
 use std::cmp;
 
 use std::ffi::{CStr, CString};
@@ -117,7 +117,7 @@ impl Cursor {
     /// Gets the C++ manglings for this cursor, or an error if the manglings
     /// are not available.
     pub(crate) fn cxx_manglings(&self) -> Result<Vec<String>, ()> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         unsafe {
             let manglings = clang_Cursor_getCXXManglings(self.x);
             if manglings.is_null() {

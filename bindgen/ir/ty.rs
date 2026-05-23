@@ -682,7 +682,7 @@ impl Type {
         parent_id: Option<ItemId>,
         ctx: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         {
             let already_resolved = ctx.builtin_or_resolved_ty(
                 potential_id,

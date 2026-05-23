@@ -6,15 +6,15 @@ use super::item::Item;
 use super::traversal::{Trace, Tracer};
 use super::ty::TypeKind;
 use crate::clang;
-use ext_php_rs_clang_sys::CXChildVisit_Continue;
-use ext_php_rs_clang_sys::CXCursor_ObjCCategoryDecl;
-use ext_php_rs_clang_sys::CXCursor_ObjCClassMethodDecl;
-use ext_php_rs_clang_sys::CXCursor_ObjCClassRef;
-use ext_php_rs_clang_sys::CXCursor_ObjCInstanceMethodDecl;
-use ext_php_rs_clang_sys::CXCursor_ObjCProtocolDecl;
-use ext_php_rs_clang_sys::CXCursor_ObjCProtocolRef;
-use ext_php_rs_clang_sys::CXCursor_ObjCSuperClassRef;
-use ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter;
+use clang_sys::CXChildVisit_Continue;
+use clang_sys::CXCursor_ObjCCategoryDecl;
+use clang_sys::CXCursor_ObjCClassMethodDecl;
+use clang_sys::CXCursor_ObjCClassRef;
+use clang_sys::CXCursor_ObjCInstanceMethodDecl;
+use clang_sys::CXCursor_ObjCProtocolDecl;
+use clang_sys::CXCursor_ObjCProtocolRef;
+use clang_sys::CXCursor_ObjCSuperClassRef;
+use clang_sys::CXCursor_TemplateTypeParameter;
 use proc_macro2::{Ident, Span, TokenStream};
 
 /// Objective-C interface as used in `TypeKind`

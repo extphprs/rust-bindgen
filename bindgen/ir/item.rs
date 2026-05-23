@@ -1285,8 +1285,8 @@ fn visit_child(
     parent_id: Option<ItemId>,
     ctx: &mut BindgenContext,
     result: &mut Result<TypeId, ParseError>,
-) -> ext_php_rs_clang_sys::CXChildVisitResult {
-    use ext_php_rs_clang_sys::*;
+) -> clang_sys::CXChildVisitResult {
+    use clang_sys::*;
     if result.is_ok() {
         return CXChildVisit_Break;
     }
@@ -1337,7 +1337,7 @@ impl Item {
         ctx: &mut BindgenContext,
     ) -> Result<ItemId, ParseError> {
         use crate::ir::var::Var;
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
 
         if !cursor.is_valid() {
             return Err(ParseError::Continue);
@@ -1578,7 +1578,7 @@ impl Item {
         parent_id: Option<ItemId>,
         ctx: &mut BindgenContext,
     ) -> Result<TypeId, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
 
         debug!(
             "Item::from_ty_with_id: {id:?}\n\
@@ -1753,7 +1753,7 @@ impl Item {
             ty.spelling(),
         );
 
-        if ty.kind() != ext_php_rs_clang_sys::CXType_Unexposed {
+        if ty.kind() != clang_sys::CXType_Unexposed {
             // If the given cursor's type's kind is not Unexposed, then we
             // aren't looking at a template parameter. This check may need to be
             // updated in the future if they start properly exposing template
@@ -1818,7 +1818,7 @@ impl Item {
             });
 
             if refd.kind()
-                != ext_php_rs_clang_sys::CXCursor_TemplateTypeParameter
+                != clang_sys::CXCursor_TemplateTypeParameter
             {
                 return false;
             }
@@ -1832,7 +1832,7 @@ impl Item {
         let definition = if is_template_with_spelling(&location, &ty_spelling) {
             // Situation (1)
             location
-        } else if location.kind() == ext_php_rs_clang_sys::CXCursor_TypeRef {
+        } else if location.kind() == clang_sys::CXCursor_TypeRef {
             // Situation (2)
             match location.referenced() {
                 Some(refd)
@@ -1848,7 +1848,7 @@ impl Item {
 
             location.visit(|child| {
                 let child_ty = child.cur_type();
-                if child_ty.kind() == ext_php_rs_clang_sys::CXCursor_TypeRef
+                if child_ty.kind() == clang_sys::CXCursor_TypeRef
                     && child_ty.spelling() == ty_spelling
                 {
                     match child.referenced() {
@@ -1859,13 +1859,13 @@ impl Item {
                             ) =>
                         {
                             definition = Some(refd);
-                            return ext_php_rs_clang_sys::CXChildVisit_Break;
+                            return clang_sys::CXChildVisit_Break;
                         }
                         _ => {}
                     }
                 }
 
-                ext_php_rs_clang_sys::CXChildVisit_Continue
+                clang_sys::CXChildVisit_Continue
             });
 
             definition?
