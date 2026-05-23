@@ -1244,7 +1244,7 @@ impl CompInfo {
         location: Option<clang::Cursor>,
         ctx: &mut BindgenContext,
     ) -> Result<Self, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         assert!(
             ty.template_args().is_none(),
             "We handle template instantiations elsewhere"
@@ -1585,7 +1585,7 @@ impl CompInfo {
     fn kind_from_cursor(
         cursor: &clang::Cursor,
     ) -> Result<CompKind, ParseError> {
-        use ext_php_rs_clang_sys::*;
+        use clang_sys::*;
         Ok(match cursor.kind() {
             CXCursor_UnionDecl => CompKind::Union,
             CXCursor_ClassDecl | CXCursor_StructDecl => CompKind::Struct,

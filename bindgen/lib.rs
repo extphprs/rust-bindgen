@@ -378,7 +378,7 @@ impl Builder {
     /// issues. The resulting file will be named something like `__bindgen.i` or
     /// `__bindgen.ii`
     pub fn dump_preprocessed_input(&self) -> io::Result<()> {
-        let clang = ext_php_rs_clang_sys::support::Clang::find(None, &[])
+        let clang = clang_sys::support::Clang::find(None, &[])
             .ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::Other,
@@ -597,7 +597,7 @@ impl BindgenOptions {
 fn ensure_libclang_is_loaded() {
     use std::sync::{Arc, OnceLock};
 
-    if ext_php_rs_clang_sys::is_loaded() {
+    if clang_sys::is_loaded() {
         return;
     }
 
@@ -605,15 +605,15 @@ fn ensure_libclang_is_loaded() {
     // doesn't get dropped prematurely, nor is loaded multiple times
     // across different threads.
 
-    static LIBCLANG: OnceLock<Arc<ext_php_rs_clang_sys::SharedLibrary>> =
+    static LIBCLANG: OnceLock<Arc<clang_sys::SharedLibrary>> =
         OnceLock::new();
     let libclang = LIBCLANG.get_or_init(|| {
-        ext_php_rs_clang_sys::load().expect("Unable to find libclang");
-        ext_php_rs_clang_sys::get_library()
+        clang_sys::load().expect("Unable to find libclang");
+        clang_sys::get_library()
             .expect("We just loaded libclang and it had better still be here!")
     });
 
-    ext_php_rs_clang_sys::set_library(Some(libclang.clone()));
+    clang_sys::set_library(Some(libclang.clone()));
 }
 
 #[cfg(not(feature = "runtime"))]
@@ -754,12 +754,12 @@ impl Bindings {
         ensure_libclang_is_loaded();
 
         #[cfg(feature = "runtime")]
-        match ext_php_rs_clang_sys::get_library().unwrap().version() {
+        match clang_sys::get_library().unwrap().version() {
             None => {
                 warn!("Could not detect a Clang version, make sure you are using libclang 9 or newer");
             }
             Some(version) => {
-                if version < ext_php_rs_clang_sys::Version::V9_0 {
+                if version < clang_sys::Version::V9_0 {
                     warn!("Detected Clang version {version:?} which is unsupported and can cause invalid code generation, use libclang 9 or newer");
                 }
             }
@@ -768,7 +768,7 @@ impl Bindings {
         #[cfg(feature = "runtime")]
         debug!(
             "Generating bindings, libclang at {}",
-            ext_php_rs_clang_sys::get_library()
+            clang_sys::get_library()
                 .unwrap()
                 .path()
                 .display()
@@ -839,7 +839,7 @@ impl Bindings {
                 "Trying to find clang with flags: {clang_args_for_clang_sys:?}"
             );
 
-            let Some(clang) = ext_php_rs_clang_sys::support::Clang::find(
+            let Some(clang) = clang_sys::support::Clang::find(
                 None,
                 &clang_args_for_clang_sys,
             ) else {
@@ -1131,7 +1131,7 @@ fn parse_one(
 
 /// Parse the Clang AST into our `Item` internal representation.
 fn parse(context: &mut BindgenContext) -> Result<(), BindgenError> {
-    use ext_php_rs_clang_sys::*;
+    use clang_sys::*;
 
     let mut error = None;
     for d in &context.translation_unit().diags() {
